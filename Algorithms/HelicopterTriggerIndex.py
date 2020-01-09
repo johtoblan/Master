@@ -15,10 +15,13 @@ class HelicopterTriggerIndex(object):
 
         return HelicopterTriggerIndex with values in [0,1]
         """
-        HTI = 0
+        
 
         for i,subfunction in enumerate(self.functions):
-            HTI += subfunction(arrays[i])
+            if i == 0:
+                HTI = subfunction(arrays[i])
+            else:
+                HTI += subfunction(arrays[i])
 
         # Average subIndexes to last HTI
         return HTI/self.N
