@@ -1,5 +1,5 @@
 from math import ceil,floor
-from fetchfields import fetchfields, get_height_value_from_pl
+import xarray as xr
 import numpy as np
 import numba
 
@@ -52,26 +52,6 @@ def temperature_max_band_from_b_to_c(b,c):
     return f
 
 @numba.jit
-def neighbourhood_max(xarrayvalues):
-    # Assume incoming object to be numpy array
-    X,Y = xarrayvalues.shape
-    result = np.zeros((X,Y))
-    # First fill non-trivial parts
-    for y in range(Y):
-        for x in range(X):
-            result[x,y] = np.max(xarrayvalues[x-1:x+2,y-1:y+2])
-        # Fill extreme lines
-        result[0,y] = np.max(xarrayvalues[0:2,y-1:y+2])
-        result[-1,y] = np.max(xarrayvalues[-2:,y-1:y+2])
-    for x in range(X):
-        # In the vertical also
-        result[x,0] = np.max(xarrayvalues[x-1:x+2,0:2])
-        result[x,-1] = np.max(xarrayvalues[x-1:x+2,-2:])
-    # Fill 0.0
-    result[0,0] = np.max(xarrayvalues[:2,:2])
-    return result
-
-@numba.jit
 def neighbourhood_max(xarrayvalues,neigbhoursize = 3):
     N = neigbhoursize
     down,up = floor(N/2),ceil(N/2)
@@ -89,7 +69,6 @@ def neighbourhood_max(xarrayvalues,neigbhoursize = 3):
         for x in range(X):
             result[x,i] = xarrayvalues[x,i]
             result[x,-(1+i)] = xarrayvalues[x,-(1+i)]
-
     return result
 
 @numba.jit
@@ -112,7 +91,6 @@ def neighbourhood_min(xarrayvalues,neigbhoursize = 3):
             result[x,-(1+i)] = xarrayvalues[x,-(1+i)]
     return result
 
-
 def only_positive_but_no_larger_than_1(array):
     size = array.shape
     result = np.zeros(size)
@@ -128,6 +106,29 @@ def only_positive_but_no_larger_than_1_with_scaling(topoarray,scaling = 15000):
         result[np.where(array > 0) and np.where(topoarray > 10)] = np.minimum(scalingfactor*1.5*array[np.where(array > 0) and np.where(topoarray > 10)],1)
         return result
     return f
+
+def fetchfields(xarray,timeindex):
+    # Fetch fields used for operational HTI - post proccessing
+    geo_pl = xarray["geopotential_pl"].isel(time=timeindex)
+    geo_sf = xarray["surface_geopotential"].isel(time=timeindex)
+    airtemp_pl = xarray["air_temperature_pl"].isel(time=timeindex)
+    rhs_pl = xarray["relative_humidity_pl"].isel(time=timeindex)
+    upward_pl = xarray["upward_air_velocity_pl"].isel(time=timeindex)
+
+    lowcloud = xarray["low_type_cloud_area_fraction"].isel(time=timeindex)
+    if timeindex > 0:
+        prec = xarray["precipitation_amount_acc"].isel(time=timeindex) - xarray["precipitation_amount_acc"].isel(time=timeindex-1)
+    else:
+        prec = xarray["precipitation_amount_acc"].isel(time=timeindex)
+
+    return  geo_pl, geo_sf, airtemp_pl, rhs_pl, upward_pl, lowcloud, prec
+
+def get_height_value_from_pl(geopotential_pl,variable_pl,height=750):
+    # Assume 925 to 850 band always has interesting heights. May need changing later
+    # Also Assume 9.81 is correct gravitational constant ( should be to 1%)
+    variableperheight = (variable_pl.sel(pressure=850) - variable_pl.sel(pressure=925))/((geopotential_pl.sel(pressure=850) - geopotential_pl.sel(pressure=925))/9.81)
+    result = variable_pl.sel(pressure=925) + variableperheight*(height -  geopotential_pl.sel(pressure=925)/9.81)
+    return result
 
 if __name__ == '__main__':
     ds = xr.open_dataset("http://thredds.met.no/thredds/dodsC/meps25epsarchive/2019/12/09/meps_extracted_2_5km_20191209T06Z.nc")
