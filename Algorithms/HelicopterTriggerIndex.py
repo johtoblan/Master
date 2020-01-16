@@ -126,8 +126,10 @@ def fetchfields(xarray,timeindex):
 def get_height_value_from_pl(geopotential_pl,variable_pl,height=750):
     # Assume 925 to 850 band always has interesting heights. May need changing later
     # Also Assume 9.81 is correct gravitational constant ( should be to 1%)
-    variableperheight = (variable_pl.sel(pressure=850) - variable_pl.sel(pressure=925))/((geopotential_pl.sel(pressure=850) - geopotential_pl.sel(pressure=925))/9.81)
-    result = variable_pl.sel(pressure=925) + variableperheight*(height -  geopotential_pl.sel(pressure=925)/9.81)
+    z2,z1 = geopotential_pl.sel(pressure=850)/9.81 , geopotential_pl.sel(pressure=925)/9.81
+    v2,v1 = variable_pl.sel(pressure=850) , variable_pl.sel(pressure=925)
+    variableperheight = (v2-v1)/(z2-z1)
+    result = v1 + variableperheight*(height - z1)
     return result
 
 if __name__ == '__main__':
