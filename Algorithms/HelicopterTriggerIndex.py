@@ -54,15 +54,14 @@ def temperature_max_band_from_b_to_c(b,c):
 @numba.jit
 def neighbourhood_max(xarrayvalues,neigbhoursize = 3):
     N = neigbhoursize
-    down,up = floor(N/2),ceil(N/2)
     # Assume incoming object to be numpy array
     X,Y = xarrayvalues.shape
     result = np.zeros((X,Y))
     # First fill non-trivial parts
-    for y in range(down,Y-up+1):
-        for x in range(down,X-up+1):
-            result[x,y] = np.max(xarrayvalues[x-down:x+up,y-down:y+up])
-    for i in range(down):
+    for y in range(N,Y-N + 1+1):
+        for x in range(N,X-N + 1+1):
+            result[x,y] = np.max(xarrayvalues[x-N:x+N + 1,y-N:y+N + 1])
+    for i in range(N):
         for y in range(Y):
             result[i,y] = xarrayvalues[i,y]
             result[-(1+i),y] = xarrayvalues[-(1+i),y]
@@ -74,15 +73,14 @@ def neighbourhood_max(xarrayvalues,neigbhoursize = 3):
 @numba.jit
 def neighbourhood_min(xarrayvalues,neigbhoursize = 3):
     N = neigbhoursize
-    down,up = floor(N/2),ceil(N/2)
     # Assume incoming object to be numpy array
     X,Y = xarrayvalues.shape
     result = np.zeros((X,Y))
     # First fill non-trivial parts
-    for y in range(down,Y-up+1):
-        for x in range(down,X-up+1):
-            result[x,y] = np.min(xarrayvalues[x-down:x+up,y-down:y+up])
-    for i in range(down):
+    for y in range(N,Y-N + 1+1):
+        for x in range(N,X-N + 1+1):
+            result[x,y] = np.min(xarrayvalues[x-N:x+N + 1,y-N:y+N + 1])
+    for i in range(N):
         for y in range(Y):
             result[i,y] = xarrayvalues[i,y]
             result[-(1+i),y] = xarrayvalues[-(1+i),y]
