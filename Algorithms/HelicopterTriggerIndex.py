@@ -6,10 +6,10 @@ import numba
 class HelicopterTriggerIndex(object):
     """docstring for HelicopterTriggerIndex."""
 
-    def __init__(self, functions, neighbourhood_size = 1):
+    def __init__(self, functions,extra_info=""):
         self.functions = functions
         self.N = len(functions)
-        self.nSize = neighbourhood_size
+        self.info = extra_info
 
     def __call__(self, arrays):
         """
@@ -26,6 +26,12 @@ class HelicopterTriggerIndex(object):
 
         # Average subIndexes to last HTI
         return HTI/self.N
+
+    def __str__(self):
+        return """
+        Helictoper Trigger Index based on %d functions (%s)
+
+        """(%self.N,self.extra_info)
 
 def temperature_max_band_from_b_to_c(b,c):
     """
@@ -110,7 +116,6 @@ def fetchfields(xarray,timeindex):
     geo_pl = xarray["geopotential_pl"].isel(time=timeindex)
     geo_sf = xarray["surface_geopotential"].isel(time=timeindex)
     airtemp_pl = xarray["air_temperature_pl"].isel(time=timeindex)
-    rhs_pl = xarray["relative_humidity_pl"].isel(time=timeindex)
     upward_pl = xarray["upward_air_velocity_pl"].isel(time=timeindex)
 
     lowcloud = xarray["low_type_cloud_area_fraction"].isel(time=timeindex)
@@ -133,7 +138,7 @@ def get_height_value_from_pl(geopotential_pl,variable_pl,height=750):
 if __name__ == '__main__':
     ds = xr.open_dataset("http://thredds.met.no/thredds/dodsC/meps25epsarchive/2019/12/09/meps_extracted_2_5km_20191209T06Z.nc")
     # 3 is the third timestep
-    geo_pl, geo_sf, airtemp_pl, rhs_pl, upward_pl, lowcloud, prec = fetchfields(ds,3)
+    geo_pl, geo_sf, airtemp_pl, upward_pl, lowcloud, prec = fetchfields(ds,3)
     # convert to C from Kelvin
     air_temp = get_height_value_from_pl(geo_pl,airtemp_pl-273.15)
     W_ = get_height_value_from_pl(geo_pl,upward_pl)
