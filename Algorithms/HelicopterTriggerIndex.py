@@ -31,7 +31,7 @@ class HelicopterTriggerIndex(object):
         return """
         Helictoper Trigger Index based on %d functions (%s)
 
-        """(%self.N,self.extra_info)
+        """%(self.N,self.extra_info)
 
 def temperature_max_band_from_b_to_c(b,c):
     """
@@ -124,7 +124,7 @@ def fetchfields(xarray,timeindex):
     else:
         prec = xarray["precipitation_amount_acc"].isel(time=timeindex)
 
-    return  geo_pl, geo_sf, airtemp_pl, rhs_pl, upward_pl, lowcloud, prec
+    return  geo_pl, geo_sf, airtemp_pl, upward_pl, lowcloud, prec
 
 def get_height_value_from_pl(geopotential_pl,variable_pl,height=750):
     # Assume 925 to 850 band always has interesting heights. May need changing later
