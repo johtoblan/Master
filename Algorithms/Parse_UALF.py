@@ -29,6 +29,9 @@ def parse_UALF(filename):
             except ValueError:
                 print(line)
                 continue
+            except IndexError:
+                print(line)
+                continue
 
             #Make Date-Time values integer, to be easier to handle with pythons-datetime
             for key in ["Year","Month","Day of month","Hour","Minutes","Seconds","Nanoseconds"]:
